@@ -46,16 +46,13 @@ export class AuthService {
     if (!passwordMatches) throw new ForbiddenException('Access Denied');
 
     const tokens = await this.getTokens(user._id, user.email);
-
     await this.updateRtHash(user._id, tokens.refresh_token);
     return tokens;
   }
 
   async refreshTokens(_id: Types.ObjectId, rt: string): Promise<Tokens> {
     const user = await this.userService.getUserById(_id);
-
     if (!user.refresh_token) throw new ForbiddenException('Access Denied');
-
     const rtMatches = bcrypt.compare(rt, user.refresh_token);
 
     if (!rtMatches) throw new ForbiddenException('Access Denied');

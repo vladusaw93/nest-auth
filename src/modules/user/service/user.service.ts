@@ -9,7 +9,7 @@ export class UserService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async getUserById(userId: Types.ObjectId): Promise<User> {
-    return this.usersRepository.findOne({ userId });
+    return this.usersRepository.findOne({ _id: userId });
   }
 
   async getUserByEmail(email: string): Promise<User> {
