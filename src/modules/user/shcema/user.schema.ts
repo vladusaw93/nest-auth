@@ -16,8 +16,11 @@ export class User {
   @Prop({ unique: true })
   email: string;
 
-  @Prop({ nullable: true })
-  refresh_token?: string;
+  @Prop({ type: Object })
+  tokens: {
+    refresh_token?: string;
+    confirmation_token?: string;
+  };
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

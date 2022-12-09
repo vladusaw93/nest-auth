@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -22,20 +23,20 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
-  @Post('/local/signup')
+  @Post('local/signup')
   @HttpCode(HttpStatus.CREATED)
-  signupLocal(@Body() dto: AuthDto): Promise<Tokens> {
+  signupLocal(@Body() dto: AuthDto): Promise<boolean> {
     return this.authService.signupLocal(dto);
   }
 
   @Public()
-  @Post('/local/signin')
+  @Post('local/signin')
   @HttpCode(HttpStatus.OK)
   signinLocal(@Body() dto: AuthDto): Promise<Tokens> {
     return this.authService.signinLocal(dto);
   }
 
-  @Post('/logout')
+  @Post('logout')
   @HttpCode(HttpStatus.OK)
   logut(@GetCurrentUserId() user_id: Types.ObjectId) {
     return this.authService.logout(user_id);
@@ -50,5 +51,19 @@ export class AuthController {
     @GetCurrentUser('refresh_token') refresh_token: string,
   ) {
     return this.authService.refreshTokens(user_id, refresh_token);
+  }
+
+  @Public()
+  @Post('resend')
+  @HttpCode(HttpStatus.OK)
+  async resendEmail(@Body('email') email: string): Promise<boolean> {
+    return this.authService.resendEmail(email);
+  }
+
+  @Public()
+  @Post('confirm/:token')
+  @HttpCode(HttpStatus.OK)
+  async activateUser(@Param('token') token: string) {
+    return this.authService.activateUser(token);
   }
 }
