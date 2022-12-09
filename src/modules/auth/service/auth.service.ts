@@ -26,10 +26,6 @@ export class AuthService {
     const newUser = await this.userService.createUser({
       ...dto,
       active: false,
-      tokens: {
-        refresh_token: null,
-        confirmation_token: null,
-      },
     });
 
     await this.sendUserConfirmation(newUser);

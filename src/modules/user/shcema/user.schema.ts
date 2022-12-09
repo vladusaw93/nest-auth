@@ -16,10 +16,13 @@ export class User {
   @Prop({ unique: true })
   email: string;
 
-  @Prop({ type: Object })
-  tokens: {
-    refresh_token?: string;
-    confirmation_token?: string;
+  @Prop({
+    type: Object,
+    default: { refresh_token: null, confirmation_token: null },
+  })
+  tokens?: {
+    refresh_token: string;
+    confirmation_token: string;
   };
 }
 
