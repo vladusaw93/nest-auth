@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './modules/auth/auth.module';
-import { AtGuard } from './modules/common/guards';
+import { AtGuard, RolesGuard } from './modules/common/guards';
 import { MailModule } from './modules/mail/mail.module';
 
 @Module({
@@ -19,6 +19,9 @@ import { MailModule } from './modules/mail/mail.module';
     AuthModule,
     MailModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: AtGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: AtGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}

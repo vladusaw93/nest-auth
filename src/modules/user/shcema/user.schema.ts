@@ -24,6 +24,9 @@ export class User {
     refresh_token: string;
     confirmation_token: string;
   };
+
+  @Prop({ type: Types.Array<string> })
+  roles: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
