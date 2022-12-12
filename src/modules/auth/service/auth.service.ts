@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserService } from '../../user/service';
 import { AuthDto } from '../dto';
 import * as bcrypt from 'bcrypt';
@@ -9,6 +9,12 @@ import { ConfigService } from '@nestjs/config';
 import { MailService } from '../../mail/service';
 import { User } from '../../user/shcema';
 import { Role } from '../../common/constants';
+import {
+  AccessDeniedError,
+  IncorrectCredentialsError,
+  InvalidDataError,
+  TokenExpiredError,
+} from '../errors';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +27,7 @@ export class AuthService {
 
   async signupLocal(dto: AuthDto): Promise<boolean> {
     const candidate = await this.userService.getUserByEmail(dto.email);
-    if (candidate) throw new HttpException('Credentials incorrect!', 400);
+    if (candidate) IncorrectCredentialsError();
 
     dto.roles = dto?.roles ? dto.roles : [Role.User];
     dto.password = await this.hasData(dto.password);
@@ -33,11 +39,11 @@ export class AuthService {
 
   async signinLocal(dto: AuthDto): Promise<Tokens> {
     const user = await this.userService.getUserByEmail(dto.email);
-    if (!user || !user.active) throw new ForbiddenException('Access Denied');
+    if (!user || !user.active) AccessDeniedError();
 
     const password_matches = bcrypt.compare(dto.password, user.password);
 
-    if (!password_matches) throw new ForbiddenException('Access Denied');
+    if (!password_matches) AccessDeniedError();
 
     const tokens = await this.getTokens(user);
     await this.updateRtHash(user, tokens.refresh_token);
@@ -55,12 +61,11 @@ export class AuthService {
 
   async refreshTokens(_id: Types.ObjectId, rt: string): Promise<Tokens> {
     const user = await this.userService.getUserById(_id);
-    if (!user.tokens.refresh_token)
-      throw new ForbiddenException('Access Denied');
+    if (!user.tokens.refresh_token) AccessDeniedError();
 
     const rt_matches = bcrypt.compare(rt, user.tokens.refresh_token);
 
-    if (!rt_matches) throw new ForbiddenException('Access Denied');
+    if (!rt_matches) AccessDeniedError();
 
     const tokens = await this.getTokens(user);
 
@@ -113,7 +118,7 @@ export class AuthService {
 
   async resendEmail(email: string) {
     const user = await this.userService.getUserByParams({ email });
-    if (!user || !user.active) throw new HttpException('Invalid data', 400);
+    if (!user || !user.active) InvalidDataError();
     await this.sendUserConfirmation(user);
     return true;
   }
@@ -129,14 +134,14 @@ export class AuthService {
       .verifyAsync(token, { secret: this.config.get<string>('CONFIRM_SECRET') })
       .then((data) => data)
       .catch(() => {
-        throw new HttpException('Token expired', 400);
+        TokenExpiredError();
       });
 
     const user = await this.userService.getUserByParams({ _id, active: false });
-    if (!user) throw new HttpException('Invalid data', 400);
+    if (!user) InvalidDataError();
 
     const tokensMatches = bcrypt.compare(token, user.tokens.confirmation_token);
-    if (!tokensMatches) throw new ForbiddenException('Access Denied');
+    if (!tokensMatches) AccessDeniedError();
 
     await this.userService.updateUser(_id, {
       active: true,
